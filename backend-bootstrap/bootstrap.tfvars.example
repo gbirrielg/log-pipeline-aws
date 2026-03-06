@@ -1,0 +1,17 @@
+/*
+  Example variables for backend-bootstrap.
+  Copy this file to `bootstrap.tfvars` and replace the placeholder values.
+  Do NOT commit `bootstrap.tfvars` containing real values.
+*/
+
+# required: S3 bucket name for terraform state
+state_bucket_name = "your-org-terraform-state-bucket"
+
+# required: DynamoDB table for state locking (default: "terraform-state-lock")
+lock_table_name   = "terraform-state-lock"
+
+# optional: AWS CLI profile name (default: "default")
+aws_profile       = "your-aws-cli-profile"
+
+# optional: AWS region (default: "us-east-1")
+aws_region        = "us-east-1"
