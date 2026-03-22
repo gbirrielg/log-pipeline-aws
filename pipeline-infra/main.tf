@@ -1,4 +1,4 @@
-# lambda role & policies
+# Setting up Lambda execution role with necessary permissions
 resource "aws_iam_role" "lambda_role" {
   name = "log-pipeline-lambda-role"
   assume_role_policy = jsonencode({
@@ -18,7 +18,29 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   role       = aws_iam_role.lambda_role.name
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_sqs_execution" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+  role       = aws_iam_role.lambda_role.name
+}
 
+resource "aws_iam_role_policy" "producer_sqs_send" {
+  name = "log-producer-sqs-send"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = ["sqs:SendMessage"]
+        Resource = aws_sqs_queue.logs.arn
+      }
+    ]
+  })
+}
+
+
+# Producer Lambda function packaging and deployment
 data "archive_file" "producer_lambda_zip" {
   type = "zip"
   source_file = "lambda/producer.py"
@@ -32,6 +54,29 @@ resource "aws_lambda_function" "log_producer" {
   handler             = "producer.handler"
   runtime             = "python3.12"
   source_code_hash    = data.archive_file.producer_lambda_zip.output_base64sha256
+
+  environment {
+    variables = {
+      QUEUE_URL = aws_sqs_queue.logs.url
+    }
+  }
+}
+
+
+# Consumer Lambda function packaging and deployment
+data "archive_file" "consumer_lambda_zip" {
+  type        = "zip"
+  source_file = "lambda/consumer.py"
+  output_path = "lambda/consumer.zip"
+}
+
+resource "aws_lambda_function" "log_consumer" {
+  filename         = data.archive_file.consumer_lambda_zip.output_path
+  function_name    = "log-consumer"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "consumer.handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.consumer_lambda_zip.output_base64sha256
 }
 
 
