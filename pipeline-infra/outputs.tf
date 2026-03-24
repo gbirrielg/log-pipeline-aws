@@ -12,3 +12,8 @@ output "consumer_lambda_name" {
   description = "Consumer Lambda function name"
   value       = aws_lambda_function.log_consumer.function_name
 }
+
+output "raw_logs_bucket_name" {
+  description = "S3 bucket for raw log archival"
+  value       = aws_s3_bucket.raw_logs.bucket
+}

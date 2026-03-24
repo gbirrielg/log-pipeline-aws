@@ -39,6 +39,22 @@ resource "aws_iam_role_policy" "producer_sqs_send" {
   })
 }
 
+resource "aws_iam_role_policy" "consumer_storage_access" {
+  name = "log-consumer-storage-access"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = ["s3:PutObject"]
+        Resource = "${aws_s3_bucket.raw_logs.arn}/*"
+      }
+    ]
+  })
+}
+
 
 # Producer Lambda function packaging and deployment
 data "archive_file" "producer_lambda_zip" {
@@ -77,6 +93,12 @@ resource "aws_lambda_function" "log_consumer" {
   handler          = "consumer.handler"
   runtime          = "python3.12"
   source_code_hash = data.archive_file.consumer_lambda_zip.output_base64sha256
+
+  environment {
+    variables = {
+      RAW_LOGS_BUCKET = aws_s3_bucket.raw_logs.bucket
+    }
+  }
 }
 
 
