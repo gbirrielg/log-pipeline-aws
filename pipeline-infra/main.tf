@@ -31,8 +31,8 @@ resource "aws_iam_role_policy" "producer_sqs_send" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = ["sqs:SendMessage"]
+        Effect   = "Allow"
+        Action   = ["sqs:SendMessage"]
         Resource = aws_sqs_queue.logs.arn
       }
     ]
@@ -47,8 +47,8 @@ resource "aws_iam_role_policy" "consumer_storage_access" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = ["s3:PutObject"]
+        Effect   = "Allow"
+        Action   = ["s3:PutObject"]
         Resource = "${aws_s3_bucket.raw_logs.arn}/*"
       }
     ]
@@ -58,18 +58,18 @@ resource "aws_iam_role_policy" "consumer_storage_access" {
 
 # Producer Lambda function packaging and deployment
 data "archive_file" "producer_lambda_zip" {
-  type = "zip"
+  type        = "zip"
   source_file = "lambda/producer.py"
   output_path = "lambda/producer.zip"
 }
 
 resource "aws_lambda_function" "log_producer" {
-  filename            = data.archive_file.producer_lambda_zip.output_path
-  function_name       = "log-producer"
-  role                = aws_iam_role.lambda_role.arn
-  handler             = "producer.handler"
-  runtime             = "python3.12"
-  source_code_hash    = data.archive_file.producer_lambda_zip.output_base64sha256
+  filename         = data.archive_file.producer_lambda_zip.output_path
+  function_name    = "log-producer"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "producer.handler"
+  runtime          = "python3.12"
+  source_code_hash = data.archive_file.producer_lambda_zip.output_base64sha256
 
   environment {
     variables = {
@@ -117,10 +117,10 @@ resource "aws_apigatewayv2_stage" "default" {
 
 # AWS Lambda integration with API Gateway
 resource "aws_apigatewayv2_integration" "producer_lambda" {
-  api_id           = aws_apigatewayv2_api.log_api.id
-  integration_type = "AWS_PROXY"
-  integration_method = "POST"
-  integration_uri  = aws_lambda_function.log_producer.invoke_arn
+  api_id                 = aws_apigatewayv2_api.log_api.id
+  integration_type       = "AWS_PROXY"
+  integration_method     = "POST"
+  integration_uri        = aws_lambda_function.log_producer.invoke_arn
   payload_format_version = "2.0"
 }
 
