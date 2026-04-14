@@ -4,3 +4,6 @@
 .terraform/
 .terraform.lock.hcl
 *.zip
+
+node_modules/
+.env
