@@ -17,3 +17,8 @@ output "raw_logs_bucket_name" {
   description = "S3 bucket for raw log archival"
   value       = aws_s3_bucket.raw_logs.bucket
 }
+
+output "log_metrics_table_name" {
+  description = "DynamoDB table for pre-aggregated log metrics"
+  value       = aws_dynamodb_table.log_metrics.name
+}

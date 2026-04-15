@@ -55,6 +55,22 @@ resource "aws_iam_role_policy" "consumer_storage_access" {
   })
 }
 
+resource "aws_iam_role_policy" "consumer_dynamodb_access" {
+  name = "log-consumer-dynamodb-access"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:UpdateItem"]
+        Resource = aws_dynamodb_table.log_metrics.arn
+      }
+    ]
+  })
+}
+
 
 # Producer Lambda function packaging and deployment
 data "archive_file" "producer_lambda_zip" {
@@ -97,6 +113,7 @@ resource "aws_lambda_function" "log_consumer" {
   environment {
     variables = {
       RAW_LOGS_BUCKET = aws_s3_bucket.raw_logs.bucket
+      METRICS_TABLE   = aws_dynamodb_table.log_metrics.name
     }
   }
 }
